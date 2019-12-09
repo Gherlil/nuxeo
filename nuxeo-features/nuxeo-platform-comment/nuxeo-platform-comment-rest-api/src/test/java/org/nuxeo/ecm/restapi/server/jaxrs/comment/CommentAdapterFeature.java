@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2013 Nuxeo SA (http://nuxeo.com/) and others.
+ * (C) Copyright 2019 Nuxeo (http://nuxeo.com/) and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,25 +14,21 @@
  * limitations under the License.
  *
  * Contributors:
- *     tmartins
+ *     Salem Aouana
  */
-package org.nuxeo.ecm.platform.comment.notification;
 
-import org.nuxeo.ecm.core.api.event.DocumentEventTypes;
+package org.nuxeo.ecm.restapi.server.jaxrs.comment;
+
+import org.nuxeo.ecm.platform.comment.CommentFeature;
+import org.nuxeo.ecm.restapi.test.RestServerFeature;
+import org.nuxeo.runtime.test.runner.Deploy;
+import org.nuxeo.runtime.test.runner.Features;
+import org.nuxeo.runtime.test.runner.RunnerFeature;
 
 /**
- * {@inheritDoc}
- * <p>
- * Veto on {@link DocumentEventTypes#DOCUMENT_CREATED}
- * </p>
- *
- * @author Thierry Martins <tmartins@nuxeo.com>
- * @since 5.7
+ * @since 11.1
  */
-public class CommentCreationVeto implements CommentNotificationVeto {
-
-    @Override
-    public String getExcludedEventType() {
-        return DocumentEventTypes.DOCUMENT_CREATED;
-    }
+@Features({ CommentFeature.class, RestServerFeature.class })
+@Deploy("org.nuxeo.ecm.platform.comment.restapi")
+public class CommentAdapterFeature implements RunnerFeature {
 }

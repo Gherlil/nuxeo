@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2013 Nuxeo SA (http://nuxeo.com/) and others.
+ * (C) Copyright 2019 Nuxeo (http://nuxeo.com/) and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,27 +12,25 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
+ *  
  * Contributors:
- *     tmartins
+ *     Salem Aouana
  */
-package org.nuxeo.ecm.platform.comment.notification;
 
-import org.nuxeo.ecm.core.api.event.DocumentEventTypes;
+package org.nuxeo.ecm.platform.comment;
+
+import org.nuxeo.ecm.platform.comment.api.CommentManager;
+import org.nuxeo.ecm.platform.comment.impl.PropertyCommentManager;
+import org.nuxeo.runtime.test.runner.Features;
 
 /**
- * {@inheritDoc}
- * <p>
- * Veto on {@link DocumentEventTypes#DOCUMENT_CREATED}
- * </p>
- *
- * @author Thierry Martins <tmartins@nuxeo.com>
- * @since 5.7
+ * @since 11.1
  */
-public class CommentCreationVeto implements CommentNotificationVeto {
+@Features(PropertyCommentFeature.class)
+public class TestPropertyCommentNotification extends AbstractTestCommentNotification {
 
     @Override
-    public String getExcludedEventType() {
-        return DocumentEventTypes.DOCUMENT_CREATED;
+    protected Class<? extends CommentManager> getType() {
+        return PropertyCommentManager.class;
     }
 }

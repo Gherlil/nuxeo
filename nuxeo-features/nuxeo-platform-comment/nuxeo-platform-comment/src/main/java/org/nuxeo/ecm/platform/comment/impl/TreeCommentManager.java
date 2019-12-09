@@ -172,8 +172,7 @@ public class TreeCommentManager extends AbstractCommentManager {
 
             manageRelatedTextOfTopLevelDocument(session, createdComment);
 
-            notifyEvent(session, CommentEvents.COMMENT_ADDED, session.getDocument(commentDocModel.getParentRef()),
-                    commentDocModel);
+            notifyEvent(session, commentDocModel, CommentEvents.COMMENT_ADDED);
             return createdComment;
         });
     }
@@ -201,7 +200,7 @@ public class TreeCommentManager extends AbstractCommentManager {
             manageRelatedTextOfTopLevelDocument(session, Comments.newComment(commentModelToCreate));
 
             commentModelToCreate.detach(true);
-            notifyEvent(session, CommentEvents.COMMENT_ADDED, documentModel, commentModelToCreate);
+            notifyEvent(session, commentModelToCreate, CommentEvents.COMMENT_ADDED);
             return commentModelToCreate;
         });
     }
@@ -246,7 +245,7 @@ public class TreeCommentManager extends AbstractCommentManager {
             Comment updatedComment = Comments.toComment(commentDocumentModel);
 
             manageRelatedTextOfTopLevelDocument(session, updatedComment);
-
+            notifyEvent(session, commentDocumentModel, CommentEvents.COMMENT_UPDATED);
             return updatedComment;
         });
     }
@@ -264,6 +263,7 @@ public class TreeCommentManager extends AbstractCommentManager {
             Comment updatedComment = Comments.toComment(commentDocModel);
 
             manageRelatedTextOfTopLevelDocument(session, updatedComment);
+            notifyEvent(session, commentDocModel, CommentEvents.COMMENT_UPDATED);
             return updatedComment;
         });
     }
@@ -449,7 +449,7 @@ public class TreeCommentManager extends AbstractCommentManager {
             DocumentModel parent = session.getDocument(commentDocModel.getParentRef());
             commentDocModel.detach(true);
             session.removeDocument(documentRef);
-            notifyEvent(session, CommentEvents.COMMENT_REMOVED, parent, commentDocModel);
+            notifyEvent(session, commentDocModel, CommentEvents.COMMENT_REMOVED);
         });
 
     }
@@ -537,6 +537,25 @@ public class TreeCommentManager extends AbstractCommentManager {
         }
 
         topLevelDoc.setPropertyValue(RELATED_TEXT_RESOURCES, (Serializable) resources);
+        topLevelDoc.putContextData(DISABLE_NOTIFICATION_SERVICE, TRUE);
         session.saveDocument(topLevelDoc);
+    }
+
+    @Override
+    public DocumentRef getCommentedDocumentRef(CoreSession session, DocumentModel commentDocumentModel) {
+        // Case when commentDocumentModel is already the document being commented
+        DocumentModel commentedDocModel = commentDocumentModel;
+
+        // Case when commentDocumentModel is a comment (can be the first comment or any reply)
+        if (commentDocumentModel.hasSchema(COMMENT_SCHEMA)) {
+            commentedDocModel = session.getDocument(commentDocumentModel.getParentRef());
+        }
+
+        // Case when commentDocumentModel is the folder that contains the comments
+        if (COMMENTS_DIRECTORY_TYPE.equals(commentedDocModel.getType())) {
+            commentedDocModel = session.getDocument(commentedDocModel.getParentRef());
+        }
+
+        return commentedDocModel.getRef();
     }
 }

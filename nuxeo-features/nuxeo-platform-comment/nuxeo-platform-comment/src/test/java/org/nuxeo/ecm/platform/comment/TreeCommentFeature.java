@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2013 Nuxeo SA (http://nuxeo.com/) and others.
+ * (C) Copyright 2019 Nuxeo (http://nuxeo.com/) and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,25 +14,21 @@
  * limitations under the License.
  *
  * Contributors:
- *     tmartins
+ *     Salem Aouana
  */
-package org.nuxeo.ecm.platform.comment.notification;
 
-import org.nuxeo.ecm.core.api.event.DocumentEventTypes;
+package org.nuxeo.ecm.platform.comment;
+
+import org.nuxeo.runtime.test.runner.Features;
+import org.nuxeo.runtime.test.runner.RunnerFeature;
 
 /**
- * {@inheritDoc}
- * <p>
- * Veto on {@link DocumentEventTypes#DOCUMENT_CREATED}
- * </p>
- *
- * @author Thierry Martins <tmartins@nuxeo.com>
- * @since 5.7
+ * Feature that provides the {@link org.nuxeo.ecm.platform.comment.impl.TreeCommentManager}.
+ * 
+ * @since 11.1
+ * @deprecated since 11.1, this feature was added for 10.10 backward compatibility. Use {@link CommentFeature} instead.
  */
-public class CommentCreationVeto implements CommentNotificationVeto {
-
-    @Override
-    public String getExcludedEventType() {
-        return DocumentEventTypes.DOCUMENT_CREATED;
-    }
+@Deprecated(since = "11.1", forRemoval = true)
+@Features(CommentFeature.class)
+public class TreeCommentFeature implements RunnerFeature {
 }
