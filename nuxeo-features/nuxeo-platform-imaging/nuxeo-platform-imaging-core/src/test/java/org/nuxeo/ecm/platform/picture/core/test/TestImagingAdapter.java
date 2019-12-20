@@ -185,5 +185,14 @@ public class TestImagingAdapter {
         assertNotEquals(0, info.getDepth());
         assertNotNull(info.getColorSpace());
         assertNotNull(info.getFormat());
+
+        // check size info
+        PictureView picView = mvp.getView("Medium");
+        ImageInfo imageBlobInfo = imagingService.getImageInfo(picView.getBlob());
+        ImageInfo resizedImageInfo = picView.getImageInfo();
+        assertEquals(imageBlobInfo.getHeight(), resizedImageInfo.getHeight());
+        assertEquals(imageBlobInfo.getWidth(), resizedImageInfo.getWidth());
+        assertEquals(imageBlobInfo.getWidth(), picView.getWidth());
+        assertEquals(imageBlobInfo.getHeight(), picView.getHeight());
     }
 }
