@@ -90,6 +90,13 @@ public class BaseDirectoryDescriptor implements Cloneable {
     public static final List<String> CREATE_TABLE_POLICIES = Arrays.asList(CREATE_TABLE_POLICY_NEVER,
             CREATE_TABLE_POLICY_ALWAYS, CREATE_TABLE_POLICY_ON_MISSING_COLUMNS);
 
+    /* append CSV file policy */
+    public enum DuplicatePolicy {
+        IGNORE_DUPLICATE,
+        ERROR_ON_DUPLCATE,
+        UPDATE_DUPLLICATE;
+    }
+
     @XNode("@name")
     public String name;
 
@@ -219,6 +226,24 @@ public class BaseDirectoryDescriptor implements Cloneable {
                     + CREATE_TABLE_POLICIES);
         }
         return ctp;
+    }
+
+    /**
+     * @since 11.1
+     */
+    @XNode("duplicatePolicy")
+    public String duplicatePolicy;
+
+    public DuplicatePolicy getDuplicatePolicy() {
+        if (StringUtils.isBlank(duplicatePolicy)) {
+            return DuplicatePolicy.ERROR_ON_DUPLCATE;
+        }
+        try {
+            return DuplicatePolicy.valueOf(duplicatePolicy);
+        } catch (IllegalArgumentException e) {
+            log.error("Unknown value for <duplicatePolicy>: " + duplicatePolicy);
+            return DuplicatePolicy.ERROR_ON_DUPLCATE;
+        }
     }
 
     public boolean isReadOnly() {

@@ -27,6 +27,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.function.Consumer;
 
 import org.apache.commons.lang3.StringUtils;
 import org.nuxeo.ecm.core.api.DocumentModel;
@@ -37,6 +39,7 @@ import org.nuxeo.ecm.core.query.sql.model.OrderByList;
 import org.nuxeo.ecm.core.schema.SchemaManager;
 import org.nuxeo.ecm.core.schema.types.Field;
 import org.nuxeo.ecm.core.schema.types.Schema;
+import org.nuxeo.ecm.directory.BaseDirectoryDescriptor.DuplicatePolicy;
 import org.nuxeo.ecm.directory.api.DirectoryDeleteConstraint;
 import org.nuxeo.runtime.api.Framework;
 import org.nuxeo.runtime.metrics.MetricsService;
@@ -112,15 +115,73 @@ public abstract class AbstractDirectory implements Directory {
         initSchemaFieldMap();
     }
 
-    protected void loadData() {
-        if (descriptor.getDataFileName() != null) {
+    /**
+     * Called on Directory initialisation, depending on "createTablePolicy".
+     * Will check the Directory "duplicatePolicy" config to append or not new data.
+     */
+    protected void loadData() { //TODO re-think the initial condition
+        //boolean appendData = !descriptor.getCreateTablePolicy().equals(CREATE_TABLE_POLICY_ALWAYS);
+        boolean appendData = false;
+        loadFromCsv(descriptor.getDataFileName(), appendData, descriptor.getDuplicatePolicy().toString());
+    }
+
+    @Override
+    public void loadFromCsv(String dataFileName, boolean appendData, String duplicateManagement) {
+        DuplicatePolicy duplicatePolicy = DuplicatePolicy.valueOf(duplicateManagement);
+        if (dataFileName != null) {
             try (Session session = getSession()) {
                 TransactionHelper.runInTransaction(() -> Framework.doPrivileged(() -> {
                     Schema schema = Framework.getService(SchemaManager.class).getSchema(getSchema());
-                    DirectoryCSVLoader.loadData(descriptor.getDataFileName(),
-                            descriptor.getDataFileCharacterSeparator(), schema,
-                            ((BaseSession) session)::createEntryWithoutReferences);
+                    if (appendData) {
+                        Consumer<Map<String, Object>> loader = new CSVLoaderConsumer(duplicatePolicy, session);
+                        DirectoryCSVLoader.loadData(dataFileName, descriptor.getDataFileCharacterSeparator(), schema,
+                                loader);
+                    } else {
+                        DirectoryCSVLoader.loadData(dataFileName, descriptor.getDataFileCharacterSeparator(), schema,
+                                ((BaseSession) session)::createEntryWithoutReferences);
+                    }
                 }));
+            }
+        }
+    }
+
+    protected class CSVLoaderConsumer implements Consumer<Map<String, Object>> {
+
+        private final DuplicatePolicy duplicatePolicy;
+
+        private final Session session;
+
+        public CSVLoaderConsumer(DuplicatePolicy duplicatePolicy, Session session) {
+            this.duplicatePolicy = Objects.requireNonNull(duplicatePolicy, "duplicatePolicy is null");
+            this.session = Objects.requireNonNull(session, "session is null");
+        }
+
+        @Override
+        public void accept(Map<String, Object> fieldMap) {
+            // check if record already exist
+            boolean alreadyExist = false;
+            Field schemaIdField = getSchemaFieldMap().get(getIdField());
+            String idFieldName = schemaIdField.getName().getPrefixedName();
+            Object rawId = fieldMap.get(idFieldName);
+            if (rawId != null) {
+                DocumentModel dm = session.getEntry(String.valueOf(rawId));
+                if (dm != null) {
+                    switch (duplicatePolicy) {
+                    case IGNORE_DUPLICATE:
+                        return;
+                    case ERROR_ON_DUPLCATE:
+                        break;
+                    case UPDATE_DUPLLICATE:
+                        alreadyExist = true;
+                        fieldMap.forEach((fieldName, value) -> dm.setProperty(getSchema(), fieldName, value));
+                        ((BaseSession) session).updateEntryWithoutReferences(dm);
+                        getCache().invalidate(String.valueOf(rawId)); //FIxme ask the team where to put
+                        break;
+                    }
+                }
+            }
+            if (!alreadyExist) {
+                ((BaseSession) session).createEntryWithoutReferences(fieldMap);
             }
         }
     }

@@ -60,6 +60,15 @@ public interface Directory {
     void initializeInverseReferences();
 
     /**
+     * Load a CSV to a Directory
+     * @param dataFileName the CSV file name to load (should be accessible in Resources
+     * @param appendData <code>true</code> to append data to an already loaded Directory, <code>false</code> to only create data wile loading this file
+     * @param duplicateManagement the duplicate_management policy to load CSV data if Directory is already loaded; (Cf. {@link BaseDirectoryDescriptor.DuplicatePolicy}
+     * @since 11.1
+     */
+    void loadFromCsv(String dataFileName, boolean appendData, String duplicateManagement);
+
+    /**
      * Gets the unique name of the directory, used for registering.
      *
      * @return the unique directory name

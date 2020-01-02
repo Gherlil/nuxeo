@@ -27,6 +27,7 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.nuxeo.ecm.core.api.Blob;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.localconfiguration.LocalConfigurationService;
 import org.nuxeo.ecm.directory.api.DirectoryService;
@@ -68,6 +69,18 @@ public class DirectoryServiceImpl extends DefaultComponent implements DirectoryS
     @Override
     public void unregisterDirectoryDescriptor(BaseDirectoryDescriptor descriptor) {
         registry.removeContribution(descriptor);
+    }
+
+    @Override
+    public void loadCSV(String directoryName, Blob dataFile, String duplicateManagement) {
+        if (log.isDebugEnabled()){//FIXME cleanup log4j
+            log.debug("Loading Directory " + directoryName + "from CSV " + dataFile + "with duplicate policy = " + duplicateManagement);
+        }
+        Directory directory = getDirectoryOrFail(directoryName);
+        if (!directory.isReadOnly()) {
+            //TODO dataFile.getFilename() must be in ClassPath what append il loaded form UI ?
+            directory.loadFromCsv(dataFile.getFilename(), true, duplicateManagement);
+        }
     }
 
     @Override

@@ -23,6 +23,7 @@ package org.nuxeo.ecm.directory.api;
 
 import java.util.List;
 
+import org.nuxeo.ecm.core.api.Blob;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.directory.BaseDirectoryDescriptor;
 import org.nuxeo.ecm.directory.Directory;
@@ -143,4 +144,11 @@ public interface DirectoryService {
      */
     void unregisterDirectoryDescriptor(BaseDirectoryDescriptor descriptor);
 
+    /**
+     * Load or update a Nuxeo directory from a CSV File.
+     * @param directoryName the directory name
+     * @param dataFile the CSV containing data to load
+     * @param duplicateManagement the policy management on duplicate Entries.
+     */
+    void loadCSV(String directoryName, Blob dataFile, String duplicateManagement);
 }
